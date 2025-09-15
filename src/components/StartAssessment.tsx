@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import LoadingScreen from './LoadingScreen';
 import Dashboard from './Dashboard';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 type StepType =
     | {
@@ -231,10 +233,18 @@ const StartupAssessment: React.FC<{ onComplete: () => void }> = ({ onComplete })
 // Main App Component
 const App = () => {
     const [currentView, setCurrentView] = useState<'assessment' | 'loading' | 'dashboard'>('assessment');
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
 
     const handleAssessmentComplete = () => {
         setCurrentView('loading');
-        setTimeout(() => setCurrentView('dashboard'), 3000);
+        setTimeout(() => {
+            if (isAuthenticated) {
+                navigate('/dashboard');
+            } else {
+                navigate('/login', { state: { from: { pathname: '/dashboard' } } });
+            }
+        }, 3000);
     };
 
     return (

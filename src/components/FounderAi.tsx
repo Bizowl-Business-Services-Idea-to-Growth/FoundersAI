@@ -9,6 +9,8 @@ import {
     Brain,
 } from "lucide-react";
 import StartAssessment from "./StartAssessment";
+import { useAuth } from "../auth/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 interface SocialLink {
     name: string;
@@ -19,6 +21,8 @@ interface SocialLink {
 const FounderLandingPage: React.FC = () => {
     const [isDarkMode] = useState(false);
     const [showForm, setShowForm] = useState(false);
+    const { isAuthenticated, user, logout } = useAuth();
+    const navigate = useNavigate();
 
     const socialLinks: SocialLink[] = [
         { name: "Twitter", icon: <span>𝕏</span>, href: "#" },
@@ -65,12 +69,24 @@ const FounderLandingPage: React.FC = () => {
                     <button className="text-gray-600 hover:text-[#1c6ed0] cursor-pointer">
                         <Bell className="w-5 h-5" />
                     </button>
-                    <div className="w-8 h-8 flex items-center justify-center bg-[#1c6ed0] cursor-pointer text-white rounded-full font-semibold">
-                        M
-                    </div>
-                    <button className="text-gray-600 hover:text-[#1c6ed0] cursor-pointer font-medium">
-                        Logout
-                    </button>
+                    {isAuthenticated ? (
+                        <>
+                            <div title={user?.email} className="w-8 h-8 flex items-center justify-center bg-[#1c6ed0] cursor-pointer text-white rounded-full font-semibold">
+                                {(user?.name?.[0] || "F").toUpperCase()}
+                            </div>
+                            <button
+                                onClick={() => { logout(); navigate("/login"); }}
+                                className="text-gray-600 hover:text-[#1c6ed0] cursor-pointer font-medium"
+                            >
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <Link to="/login" className="text-gray-600 hover:text-[#1c6ed0] font-medium">Sign in</Link>
+                            <Link to="/signup" className="px-3 py-1.5 bg-[#1c6ed0] text-white rounded-md text-sm font-medium">Sign up</Link>
+                        </div>
+                    )}
                 </div>
             </nav>
 

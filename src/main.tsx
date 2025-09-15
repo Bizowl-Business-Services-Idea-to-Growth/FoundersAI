@@ -6,15 +6,30 @@ import "./index.css";
 import App from "./App";
 import Dashboard from "./components/Dashboard";
 import FounderLandingPage from "./components/FounderAi";
+import { AuthProvider } from "./auth/AuthContext";
+import RequireAuth from "./auth/RequireAuth";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/founder" element={<FounderLandingPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/founder" element={<FounderLandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth>
+                <Dashboard />
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   </StrictMode>
 );
