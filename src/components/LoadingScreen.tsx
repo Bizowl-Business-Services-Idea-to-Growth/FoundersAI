@@ -1,4 +1,4 @@
-// import React from "react";
+// no React import needed with jsx: react-jsx
 
 const LoadingScreen = () => {
     return (

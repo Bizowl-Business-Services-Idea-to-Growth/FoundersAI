@@ -1,4 +1,4 @@
-import { User, MessageCircle} from "lucide-react";
+import { User, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import ActionPlanModal from "./ActionPlanModal";
 
