@@ -60,7 +60,7 @@ const FounderLandingPage: React.FC = () => {
                         <Brain className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-[#1c6ed0] font-semibold text-2xl">FounderAI</h1>
+                        <h1 className="text-[#1c6ed0] font-semibold text-2xl">FoundersAI</h1>
                         <p className="text-gray-500 text-xs">by Bizowl</p>
                     </div>
                 </div>
@@ -71,9 +71,9 @@ const FounderLandingPage: React.FC = () => {
                     </button>
                     {isAuthenticated ? (
                         <>
-                            <div title={user?.email} className="w-8 h-8 flex items-center justify-center bg-[#1c6ed0] cursor-pointer text-white rounded-full font-semibold">
+                            <Link to="/profile" title={user?.email} className="w-8 h-8 flex items-center justify-center bg-[#1c6ed0] cursor-pointer text-white rounded-full font-semibold">
                                 {(user?.name?.[0] || "F").toUpperCase()}
-                            </div>
+                            </Link>
                             <button
                                 onClick={() => { logout(); navigate("/login"); }}
                                 className="text-gray-600 hover:text-[#1c6ed0] cursor-pointer font-medium"
@@ -123,7 +123,8 @@ const FounderLandingPage: React.FC = () => {
                             </div>
                             <div>
                                 <h2 className="text-3xl font-bold text-gray-800">
-                                    Welcome back, Mustafa! <span className="inline-block">👋</span>
+                                    Welcome back, {isAuthenticated ? user?.name : "Founder"}!{" "}
+                                    <span className="inline-block">👋</span>
                                 </h2>
                                 <p className="text-gray-500 text-sm">
                                     Ready to take your startup to the next level?

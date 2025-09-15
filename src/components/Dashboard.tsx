@@ -2,7 +2,7 @@ import { User, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import ActionPlanModal from "./ActionPlanModal";
 
-const Dashboard = () => {
+const MainDashboard = () => {
     const [showActionPlan, setShowActionPlan] = useState(false);
 
     return (
@@ -171,4 +171,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default MainDashboard;
