@@ -1,5 +1,5 @@
-import { User, MessageCircle, MessageSquareIcon } from "lucide-react";
-import React, { useState } from "react";
+import { User, MessageCircle} from "lucide-react";
+import { useState } from "react";
 import ActionPlanModal from "./ActionPlanModal";
 
 const Dashboard = () => {

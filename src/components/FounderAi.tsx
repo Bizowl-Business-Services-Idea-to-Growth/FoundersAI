@@ -17,7 +17,7 @@ interface SocialLink {
 }
 
 const FounderLandingPage: React.FC = () => {
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isDarkMode] = useState(false);
     const [showForm, setShowForm] = useState(false);
 
     const socialLinks: SocialLink[] = [
