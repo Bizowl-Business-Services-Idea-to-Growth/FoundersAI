@@ -16,8 +16,22 @@ createRoot(document.getElementById("root")!).render(
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/founder" element={<FounderLandingPage />} />
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <App />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/founder"
+            element={
+              <RequireAuth>
+                <FounderLandingPage />
+              </RequireAuth>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route

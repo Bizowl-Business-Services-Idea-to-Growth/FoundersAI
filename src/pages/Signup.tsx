@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Brain, Mail, Lock, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const Signup: React.FC = () => {
-  const { signup } = useAuth();
+  const { signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
