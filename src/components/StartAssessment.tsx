@@ -28,12 +28,12 @@ const steps: StepType[] = [
     {
         id: 1,
         type: "options",
-        question: "What stage is your startup currently in?",
+        question: "Who is your target customer segment?",
         options: [
-            { label: "Idea Stage", description: "I have a business idea but haven't built anything yet" },
-            { label: "MVP Stage", description: "I have a minimum viable product and early users" },
-            { label: "Growth Stage", description: "I have product-market fit and am scaling" },
-            { label: "Scale Stage", description: "I'm expanding operations and preparing for exit" },
+            { label: "Individual consumers", description: "I have a business idea but haven't built anything yet" },
+            { label: "Small businesses", description: "I have a minimum viable product and early users" },
+            { label: "Enterprises", description: "I have product-market fit and am scaling" },
+            { label: "Government/NGOs", description: "I'm expanding operations and preparing for exit" },
         ],
     },
     {
@@ -50,14 +50,55 @@ const steps: StepType[] = [
             { label: "Operations & Scaling" },
         ],
     },
-    {
+     {
         id: 3,
-        type: "textarea",
-        question: "What are your main aspirations and goals?",
-        placeholder: "Tell us about your vision, goals, and what success looks like for your startup...",
+        type: "options",
+        question: "If targeting a crowded industry, do you focus on a niche?",
+        options: [
+            { label: "Yes, a large growing niche", description: "I have a business idea but haven't built anything yet" },
+            { label: "Yes, a small niche", description: "I have a minimum viable product and early users" },
+            { label: "No, targeting the whole market", description: "I have product-market fit and am scaling" },
+            { label: "Not applicable", description: "I'm expanding operations and preparing for exit" },
+        ],
     },
     {
         id: 4,
+        type: "textarea",
+        question: "Briefly describe your Startup/idea.",
+        placeholder: "Summarize your startup or idea in 2-3 sentences. What does it do and who is it for?",
+    },
+    {
+        id: 5,
+        type: "textarea",
+        question: "What specific problem are you solving?",
+        placeholder: "Describe the key pain point or issue your startup addresses.",
+    },
+    {
+        id: 6,
+        type: "textarea",
+        question: "What is your proposed solution to this problem?",
+        placeholder: "Explain how your product or service solves the problem.",
+    },
+    {
+        id: 7,
+        type: "textarea",
+        question: "Who is your target audience or customer segment?",
+        placeholder: "Identify the primary users or customers your startup aims to serve.",
+    },
+    {
+        id: 8,
+        type: "textarea",
+        question: "What do you see as the biggest risks or challenges in building your startup? Any plans to overcome them?",
+        placeholder: "Share top challenges and your approach to managing them.",
+    },
+    {
+        id: 9,
+        type: "textarea",
+        question: "How large is this market, and what opportunity do you see in it?",
+        placeholder: "Estimate the market size and growth potential you are targeting.",
+    },
+    {
+        id: 10,
         type: "double-textarea",
         questions: [
             { label: "What are your key strengths?", placeholder: "Describe your strengths..." },

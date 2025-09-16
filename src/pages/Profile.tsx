@@ -66,8 +66,26 @@ const UserProfile: React.FC = () => {
         setProfile(data);
         setEditedProfile(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(errorMessage);
         console.error(err);
+        // DEV-ONLY FALLBACK: If the API fails, use mock data so the page is still visible.
+        // In a production environment, you would likely just show the error message.
+        console.warn(`API fetch failed: "${errorMessage}". Falling back to mock data for development purposes.`);
+        const mockProfile: UserProfile = {
+          username: (authUser.name || 'dev_user').toLowerCase().replace(/ /g, '_'),
+          fullName: authUser.name || 'Developer',
+          email: authUser.email,
+          phoneNumber: '+1 (123) 456-7890',
+          startupStage: 'Seed',
+          role: 'Founder',
+          companyName: 'My Startup',
+          joinedDate: new Date().toISOString(),
+          bio: 'This is mock data because the API call failed. The profile is fully editable. Please check your backend connection to fetch real data.',
+          avatarUrl: 'https://via.placeholder.com/150',
+        };
+        setProfile(mockProfile);
+        setEditedProfile(mockProfile);
       } finally {
         setIsLoading(false);
       }
@@ -155,7 +173,17 @@ const UserProfile: React.FC = () => {
   }
 
   if (!profile || !editedProfile) {
-    return null; // Or a "profile not found" message
+    // This state can be reached if the user is not logged in.
+    return (
+        <div className="flex items-center justify-center h-screen text-center bg-gray-50">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Profile not loaded</h2>
+            <p className="text-gray-600">
+              It seems you are not logged in. Please log in to view your profile.
+            </p>
+          </div>
+        </div>
+      );
   }
 
   return (
