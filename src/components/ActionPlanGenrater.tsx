@@ -15,7 +15,8 @@ const ActionPlanGenerator: React.FC<ActionPlanGeneratorProps> = ({ userId }) => 
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`http://127.0.0.1:8000/generate-roadmap/${userId}`);
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+        const res = await fetch(`${baseUrl}/generate-roadmap/${userId}`);
         console.log("[DEBUG] Fetch response status:", res.status);
         if (!res.ok) {
           const errorText = await res.text();
