@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { loadProfile, saveProfile } from '../auth/profileStorage';
 import { User, Mail, Phone, Briefcase, Building, Edit, Save, X, Loader2 } from 'lucide-react';
 
 // Define a type for the user data for type safety
@@ -21,18 +22,19 @@ type UserProfile = {
  */
 const UserProfile: React.FC = () => {
   // The `authUser` object from your AuthContext should contain the user's data, including the token.
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAuthenticated } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     // If there's no authenticated user, reset the component state.
     // Using `as any` to bypass the TypeScript error. The ideal fix is to add `token` to the User type in AuthContext.
-    if (!authUser || !(authUser as any).token) {
+    if (!isAuthenticated || !authUser) {
       setIsLoading(false);
       setProfile(null);
       setEditedProfile(null);
@@ -48,11 +50,7 @@ const UserProfile: React.FC = () => {
       try {
         // TODO: Replace with your actual API endpoint.
         const response = await fetch('/api/user/profile', {
-          headers: {
-            // TODO: Adjust authorization based on your backend needs.
-            // This assumes you are using a Bearer token from your auth context.
-            'Authorization': `Bearer ${(authUser as any).token}`,
-          },
+          headers: authUser.token ? { 'Authorization': `Bearer ${authUser.token}` } : {},
         });
 
         if (!response.ok) {
@@ -65,27 +63,36 @@ const UserProfile: React.FC = () => {
         const data: UserProfile = await response.json();
         setProfile(data);
         setEditedProfile(data);
+        // persist to local fallback for subsequent loads offline
+        saveProfile(authUser.id, data);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
         setError(errorMessage);
         console.error(err);
-        // DEV-ONLY FALLBACK: If the API fails, use mock data so the page is still visible.
-        // In a production environment, you would likely just show the error message.
-        console.warn(`API fetch failed: "${errorMessage}". Falling back to mock data for development purposes.`);
-        const mockProfile: UserProfile = {
-          username: (authUser.name || 'dev_user').toLowerCase().replace(/ /g, '_'),
-          fullName: authUser.name || 'Developer',
-          email: authUser.email,
-          phoneNumber: '+1 (123) 456-7890',
-          startupStage: 'Seed',
-          role: 'Founder',
-          companyName: 'My Startup',
-          joinedDate: new Date().toISOString(),
-          bio: 'This is mock data because the API call failed. The profile is fully editable. Please check your backend connection to fetch real data.',
-          avatarUrl: 'https://via.placeholder.com/150',
-        };
-        setProfile(mockProfile);
-        setEditedProfile(mockProfile);
+        // Fallback order: previously saved custom profile -> generated mock
+        const stored = loadProfile(authUser.id) as UserProfile | null;
+        if (stored) {
+          console.info('Loaded profile from local fallback storage.');
+          setProfile(stored);
+          setEditedProfile(stored);
+        } else {
+          console.warn(`API fetch failed: "${errorMessage}". Using generated mock profile.`);
+          const mockProfile: UserProfile = {
+            username: (authUser.name || 'dev_user').toLowerCase().replace(/ /g, '_'),
+            fullName: authUser.name || 'Developer',
+            email: authUser.email,
+            phoneNumber: '+1 (123) 456-7890',
+            startupStage: 'Seed',
+            role: 'Founder',
+            companyName: 'My Startup',
+            joinedDate: new Date().toISOString(),
+            bio: 'This is mock data because the API call failed. Your edits will be saved locally until the backend is available.',
+            avatarUrl: 'https://via.placeholder.com/150',
+          };
+          setProfile(mockProfile);
+          setEditedProfile(mockProfile);
+          saveProfile(authUser.id, mockProfile);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -108,12 +115,13 @@ const UserProfile: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!editedProfile || !authUser || !(authUser as any).token) {
+    if (!editedProfile || !authUser) {
       setError("Cannot save profile. Data is missing.");
       return;
     }
     setIsSaving(true);
     setError(null);
+    setSaveMessage(null);
 
     try {
       // TODO: Replace with your actual API endpoint.
@@ -121,21 +129,28 @@ const UserProfile: React.FC = () => {
         method: 'PUT', // or 'PATCH'
         headers: {
           'Content-Type': 'application/json',
-          // TODO: Adjust authorization based on your backend needs.
-          'Authorization': `Bearer ${(authUser as any).token}`,
+          ...(authUser.token ? { 'Authorization': `Bearer ${authUser.token}` } : {}),
         },
         body: JSON.stringify(editedProfile),
       });
 
       if (!response.ok) {
+        // Attempt local fallback save when API fails
         const errorData = await response.json().catch(() => ({ message: 'Failed to save profile.' }));
-        throw new Error(errorData.message || 'An error occurred while saving.');
+        const localMsg = errorData.message || 'Remote save failed.';
+        saveProfile(authUser.id, editedProfile);
+        setProfile(editedProfile);
+        setIsEditing(false);
+        setSaveMessage(`${localMsg} Changes stored locally.`);
+        return;
       }
 
       const updatedProfile: UserProfile = await response.json();
       setProfile(updatedProfile);
       setEditedProfile(updatedProfile);
+      saveProfile(authUser.id, updatedProfile);
       setIsEditing(false);
+      setSaveMessage('Profile saved successfully.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       console.error("Failed to save profile", err);
@@ -247,7 +262,8 @@ const UserProfile: React.FC = () => {
           </div>
         </div>
 
-        {error && isEditing && <p className="text-red-600 text-center mb-4">{error}</p>}
+  {error && isEditing && <p className="text-red-600 text-center mb-4">{error}</p>}
+  {saveMessage && !error && <p className="text-green-600 text-center mb-4">{saveMessage}</p>}
 
         {/* Profile Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

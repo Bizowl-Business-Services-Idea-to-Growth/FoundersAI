@@ -174,7 +174,7 @@ const FounderLandingPage: React.FC = () => {
                     </>
                 ) : (
                     <div className="bg-white shadow-md rounded-lg px-6 py-10 m-10">
-                        <StartAssessment />
+                        <StartAssessment onComplete={() => navigate("/dashboard")} />
                     </div>
                 )}
             </section>
