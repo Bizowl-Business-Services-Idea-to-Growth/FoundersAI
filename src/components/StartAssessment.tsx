@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+
+
 type StepType =
   | {
       id: number;
@@ -105,9 +107,10 @@ const steps: StepType[] = [
 
 type Props = {
   onComplete: () => void;
+  userId: string; 
 };
 
-const StartupAssessment: React.FC<Props> = ({ onComplete }) => {
+const StartupAssessment: React.FC<Props> = ({ onComplete, userId }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [error, setError] = useState("");
@@ -149,7 +152,7 @@ const StartupAssessment: React.FC<Props> = ({ onComplete }) => {
       // Submit data to backend
       try {
         const payload = {
-          userId: "user_123", // Replace with real user ID from context/auth
+          userId,// Replace with real user ID from context/auth
           responses: formatAnswersForBackend(),
         };
 

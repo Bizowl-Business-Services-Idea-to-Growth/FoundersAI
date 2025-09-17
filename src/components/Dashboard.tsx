@@ -1,14 +1,24 @@
+
 import { User, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import ActionPlanModal from "./ActionPlanModal";
+import { useAuth } from "../auth/AuthContext";  // adjust path as needed
 
 const MainDashboard = () => {
-    const [showActionPlan, setShowActionPlan] = useState(false);
+  const { user } = useAuth();
+  const userId = user?.id || ""; // fallback to empty string if user undefined
 
+  const [showActionPlan, setShowActionPlan] = useState(false);
+
+  if (!userId) {
+    // Optionally handle or wait for auth userId
+    return <div>Loading user info...</div>;
+  }
     return (
         <div className="min-h-screen py-10">
-            {showActionPlan && <ActionPlanModal onClose={() => setShowActionPlan(false)} />}
-
+      {showActionPlan && (
+        <ActionPlanModal onClose={() => setShowActionPlan(false)} userId={userId} />
+      )}
             <div className="max-w-7xl mx-auto px-6 space-y-10">
                 {/* Welcome Banner */}
                 <div className="bg-white shadow-sm rounded-lg px-8 py-9 flex items-center space-x-4">
