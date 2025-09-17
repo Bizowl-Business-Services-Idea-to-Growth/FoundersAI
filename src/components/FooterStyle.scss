@@ -1,0 +1,130 @@
+.footerContainer{
+    width: 100%;
+    height: 70vh;
+    background-image: linear-gradient(to right, #4885cf, #15539c);
+    border-top-right-radius: 150px;
+    padding-inline: 10%;
+    @media(max-width:1600px) {
+        // padding-inline: 5%;
+        height: auto;
+    }
+    @media(max-width:976px) {
+        padding-inline: 5%;
+        height: auto;
+    }
+    @media(max-width:767px) {
+        padding-inline: 5%;
+        padding-bottom: 5%;
+        height: auto;
+    }
+}
+.footerSec1{
+    width: 100%;
+padding-top: 50px;
+}
+.footerSec1Col1{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.footerSec1Col2{
+   
+}
+.text1{
+color: #c9daef;
+font-size:20px;
+font-weight:400;
+display: flex;
+justify-content: flex-start;
+@media(max-width:976px){
+    font-size:18px;
+    width: 80%;
+    margin-left: 10%;
+}
+}
+.text2{
+    color: #fafafa;
+    font-size:32px;
+    font-weight:700;
+    display: flex;
+    justify-content: flex-start;
+    @media(max-width:976px){
+        font-size:22px;
+        width: 80%;
+        margin-left: 10%;
+    }
+}
+.inputBoxStyle{
+    background-color: transparent;
+    border-bottom: solid 1px #fafafa;
+    padding-block: 10px;
+    @media(max-width:976px){
+        width: 80%;
+        margin-left: 10%;
+    }
+}
+.inputStyle{
+    flex: 1;
+    background-color: transparent;
+    border-width: 0;
+    outline: none;
+    caret-color: #fafafa;
+    color: #fafafa;
+}
+input::placeholder {
+    font-weight: bold;
+    opacity: 0.5;
+    color: #fafafa;
+}
+.footerSendButtonStyle{
+    background-color: transparent;
+    border-width: 0;
+}
+.sendButtonStyle{
+border: none;
+&:hover{
+    scale: 1.1;
+    transition: 0.3s;
+}
+}
+.footerSec2{
+
+}
+.footerSec2Text1{
+    // padding-left: 5%;
+    text-align: left;
+    color: #fafafa;
+    padding-top: 10px;
+    font-weight: 500;
+}
+.footerSec2Text2{
+    // padding-left: 5%;
+    text-align: left;
+    color: #c9daef;
+    padding-top: 10px;
+    font-weight: 500;
+}
+.footerSec2SocialIcons{
+    padding-top: 10px ;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+   
+}
+.socialIconView{
+    height: 35px;
+    width: 35px;
+    border-radius: 18px;
+    background-color: #4885cf;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pointer{
+    cursor: pointer;
+    &:hover{
+        scale: 1.1;
+        transition: 0.3s;
+    }
+}

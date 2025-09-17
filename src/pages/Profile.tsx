@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import type { ChangeEvent } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { loadProfile, saveProfile } from '../auth/profileStorage';
 import { User, Mail, Phone, Briefcase, Building, Edit, Save, X, Loader2 } from 'lucide-react';
 
-// Define a type for the user data for type safety
 type UserProfile = {
   username: string;
   fullName: string;
@@ -14,14 +14,10 @@ type UserProfile = {
   companyName: string;
   joinedDate: string;
   bio: string;
-  avatarUrl?: string; // Optional avatar
+  avatarUrl?: string;
 };
 
-/**
- * A dashboard component that displays and allows editing of a user's profile information.
- */
 const UserProfile: React.FC = () => {
-  // The `authUser` object from your AuthContext should contain the user's data, including the token.
   const { user: authUser, isAuthenticated } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -30,10 +26,10 @@ const UserProfile: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // If there's no authenticated user, reset the component state.
-    // Using `as any` to bypass the TypeScript error. The ideal fix is to add `token` to the User type in AuthContext.
     if (!isAuthenticated || !authUser) {
       setIsLoading(false);
       setProfile(null);
@@ -42,41 +38,37 @@ const UserProfile: React.FC = () => {
       return;
     }
 
-    // When authUser changes, start loading and clear previous errors.
     setIsLoading(true);
     setError(null);
 
     const fetchProfile = async () => {
       try {
-        // TODO: Replace with your actual API endpoint.
         const response = await fetch('/api/user/profile', {
-          headers: authUser.token ? { 'Authorization': `Bearer ${authUser.token}` } : {},
+          headers: authUser.token ? { Authorization: `Bearer ${authUser.token}` } : {},
         });
 
         if (!response.ok) {
           if (response.status === 401) {
-            throw new Error('Authentication session expired. Please log in again.');
+            throw new Error('Authentication expired. Please log in again.');
           }
-          throw new Error('Failed to fetch user profile. Please try again later.');
+          throw new Error('Failed to fetch profile.');
         }
 
         const data: UserProfile = await response.json();
         setProfile(data);
         setEditedProfile(data);
-        // persist to local fallback for subsequent loads offline
+        setAvatarPreview(data.avatarUrl);
         saveProfile(authUser.id, data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error.';
         setError(errorMessage);
-        console.error(err);
-        // Fallback order: previously saved custom profile -> generated mock
+
         const stored = loadProfile(authUser.id) as UserProfile | null;
         if (stored) {
-          console.info('Loaded profile from local fallback storage.');
           setProfile(stored);
           setEditedProfile(stored);
+          setAvatarPreview(stored.avatarUrl);
         } else {
-          console.warn(`API fetch failed: "${errorMessage}". Using generated mock profile.`);
           const mockProfile: UserProfile = {
             username: (authUser.name || 'dev_user').toLowerCase().replace(/ /g, '_'),
             fullName: authUser.name || 'Developer',
@@ -86,11 +78,12 @@ const UserProfile: React.FC = () => {
             role: 'Founder',
             companyName: 'My Startup',
             joinedDate: new Date().toISOString(),
-            bio: 'This is mock data because the API call failed. Your edits will be saved locally until the backend is available.',
+            bio: 'Mock data due to API error. Your edits will be stored locally.',
             avatarUrl: 'https://via.placeholder.com/150',
           };
           setProfile(mockProfile);
           setEditedProfile(mockProfile);
+          setAvatarPreview(mockProfile.avatarUrl);
           saveProfile(authUser.id, mockProfile);
         }
       } finally {
@@ -99,24 +92,39 @@ const UserProfile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [authUser]);
+  }, [authUser, isAuthenticated]);
+
+  // Handle avatar file selection and preview
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      const url = URL.createObjectURL(file);
+      setAvatarPreview(url);
+      if (editedProfile) {
+        setEditedProfile({ ...editedProfile, avatarUrl: url });
+      }
+    }
+  };
 
   const handleEdit = () => {
     setIsEditing(true);
-    setError(null); // Clear previous save errors
+    setError(null);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     if (profile) {
-      setEditedProfile(profile); // Reset changes
+      setEditedProfile(profile);
+      setAvatarPreview(profile.avatarUrl);
+      setAvatarFile(null);
     }
     setError(null);
   };
 
   const handleSave = async () => {
     if (!editedProfile || !authUser) {
-      setError("Cannot save profile. Data is missing.");
+      setError('Cannot save profile. Missing data.');
       return;
     }
     setIsSaving(true);
@@ -124,24 +132,34 @@ const UserProfile: React.FC = () => {
     setSaveMessage(null);
 
     try {
-      // TODO: Replace with your actual API endpoint.
+      // If avatarFile exists, upload it first and get URL
+      let avatarUrlToSave = editedProfile.avatarUrl;
+      if (avatarFile) {
+        // Simulate upload - replace with your actual upload logic
+        // For example, upload to S3 or backend and get the URL
+        // Here we just accept the preview URL (not permanent)
+        avatarUrlToSave = avatarPreview;
+      }
+
+      const saveData = { ...editedProfile, avatarUrl: avatarUrlToSave };
+
       const response = await fetch('/api/user/profile', {
-        method: 'PUT', // or 'PATCH'
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...(authUser.token ? { 'Authorization': `Bearer ${authUser.token}` } : {}),
+          ...(authUser.token ? { Authorization: `Bearer ${authUser.token}` } : {}),
         },
-        body: JSON.stringify(editedProfile),
+        body: JSON.stringify(saveData),
       });
 
       if (!response.ok) {
-        // Attempt local fallback save when API fails
-        const errorData = await response.json().catch(() => ({ message: 'Failed to save profile.' }));
+        const errorData = await response.json().catch(() => ({ message: 'Save failed.' }));
         const localMsg = errorData.message || 'Remote save failed.';
-        saveProfile(authUser.id, editedProfile);
-        setProfile(editedProfile);
+        saveProfile(authUser.id, saveData);
+        setProfile(saveData);
+        setEditedProfile(saveData);
         setIsEditing(false);
-        setSaveMessage(`${localMsg} Changes stored locally.`);
+        setSaveMessage(`${localMsg} Changes saved locally.`);
         return;
       }
 
@@ -151,15 +169,18 @@ const UserProfile: React.FC = () => {
       saveProfile(authUser.id, updatedProfile);
       setIsEditing(false);
       setSaveMessage('Profile saved successfully.');
+      setAvatarFile(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-      console.error("Failed to save profile", err);
+      setError(err instanceof Error ? err.message : 'Unknown error.');
+      console.error('Save failed', err);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     if (editedProfile) {
       setEditedProfile({
         ...editedProfile,
@@ -188,30 +209,44 @@ const UserProfile: React.FC = () => {
   }
 
   if (!profile || !editedProfile) {
-    // This state can be reached if the user is not logged in.
     return (
-        <div className="flex items-center justify-center h-screen text-center bg-gray-50">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Profile not loaded</h2>
-            <p className="text-gray-600">
-              It seems you are not logged in. Please log in to view your profile.
-            </p>
-          </div>
+      <div className="flex items-center justify-center h-screen text-center bg-gray-50">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Profile not loaded</h2>
+          <p className="text-gray-600">Please log in to view your profile.</p>
         </div>
-      );
+      </div>
+    );
   }
 
   return (
     <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-        {/* Header */}
+        {/* Header with Avatar */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-8 pb-6 border-b border-gray-200">
           <div className="flex items-center">
-            <img
-              src={profile.avatarUrl || 'https://via.placeholder.com/150'}
-              alt={`${profile.fullName}'s avatar`}
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
-            />
+            <div className="relative">
+              <img
+                src={avatarPreview || 'https://via.placeholder.com/150'}
+                alt={`${profile.fullName}'s avatar`}
+                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
+              />
+              {isEditing && (
+                <label htmlFor="avatarUpload" className="absolute bottom-0 right-0 bg-[#1c6ed0] p-2 rounded-full cursor-pointer border-2 border-white hover:bg-blue-700 transition">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <input
+                    type="file"
+                    id="avatarUpload"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
             <div className="ml-6">
               {isEditing ? (
                 <>
@@ -239,10 +274,15 @@ const UserProfile: React.FC = () => {
               )}
             </div>
           </div>
+
           <div className="mt-4 sm:mt-0">
             {isEditing ? (
               <div className="flex gap-2">
-                <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {isSaving ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
@@ -250,20 +290,27 @@ const UserProfile: React.FC = () => {
                   )}
                   {isSaving ? 'Saving...' : 'Save'}
                 </button>
-                <button onClick={handleCancel} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition disabled:opacity-50">
+                <button
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition disabled:opacity-50"
+                >
                   <X size={18} /> Cancel
                 </button>
               </div>
             ) : (
-              <button onClick={handleEdit} className="flex items-center gap-2 px-4 py-2 bg-[#1c6ed0] text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+              <button
+                onClick={handleEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-[#1c6ed0] text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
                 <Edit size={18} /> Edit Profile
               </button>
             )}
           </div>
         </div>
 
-  {error && isEditing && <p className="text-red-600 text-center mb-4">{error}</p>}
-  {saveMessage && !error && <p className="text-green-600 text-center mb-4">{saveMessage}</p>}
+        {error && isEditing && <p className="text-red-600 text-center mb-4">{error}</p>}
+        {saveMessage && !error && <p className="text-green-600 text-center mb-4">{saveMessage}</p>}
 
         {/* Profile Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -272,7 +319,14 @@ const UserProfile: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">Contact Information</h2>
             <div className="space-y-4">
               <InfoItem icon={<Mail size={20} className="text-gray-400" />} label="Email" value={profile.email} isEditing={false} />
-              <InfoItem icon={<Phone size={20} className="text-gray-400" />} label="Phone Number" name="phoneNumber" value={editedProfile.phoneNumber} isEditing={isEditing} onChange={handleChange} />
+              <InfoItem
+                icon={<Phone size={20} className="text-gray-400" />}
+                label="Phone Number"
+                name="phoneNumber"
+                value={editedProfile.phoneNumber}
+                isEditing={isEditing}
+                onChange={handleChange}
+              />
             </div>
           </div>
 
@@ -280,8 +334,22 @@ const UserProfile: React.FC = () => {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-700 border-b pb-2">Professional Details</h2>
             <div className="space-y-4">
-              <InfoItem icon={<Building size={20} className="text-gray-400" />} label="Company" name="companyName" value={editedProfile.companyName} isEditing={isEditing} onChange={handleChange} />
-              <InfoItem icon={<Briefcase size={20} className="text-gray-400" />} label="Role" name="role" value={editedProfile.role} isEditing={isEditing} onChange={handleChange} />
+              <InfoItem
+                icon={<Building size={20} className="text-gray-400" />}
+                label="Company"
+                name="companyName"
+                value={editedProfile.companyName}
+                isEditing={isEditing}
+                onChange={handleChange}
+              />
+              <InfoItem
+                icon={<Briefcase size={20} className="text-gray-400" />}
+                label="Role"
+                name="role"
+                value={editedProfile.role}
+                isEditing={isEditing}
+                onChange={handleChange}
+              />
               <InfoItem
                 icon={<User size={20} className="text-gray-400" />}
                 label="Startup Stage"
@@ -322,7 +390,7 @@ const UserProfile: React.FC = () => {
   );
 };
 
-// Helper component for displaying info items
+
 const InfoItem: React.FC<{
   icon: React.ReactNode;
   label: string;
@@ -346,7 +414,11 @@ const InfoItem: React.FC<{
               onChange={onChange}
               className="mt-1 w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-[#1c6ed0] focus:outline-none"
             >
-              {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              {options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
             </select>
           ) : (
             <input
