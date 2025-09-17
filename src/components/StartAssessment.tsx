@@ -156,11 +156,12 @@ const StartupAssessment: React.FC<Props> = ({ onComplete, userId }) => {
           responses: formatAnswersForBackend(),
         };
 
-        const response = await fetch("http://127.0.0.1:8000/save-responses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+        const response = await fetch(`${baseUrl}/save-responses`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
 
         if (!response.ok) {
           const errData = await response.json();
