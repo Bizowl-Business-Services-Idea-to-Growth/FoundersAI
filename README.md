@@ -67,3 +67,23 @@ export default tseslint.config([
   },
 ])
 ```
+
+## Backend Integration
+
+This frontend expects a FastAPI backend (FoundersAI_backend) providing auth endpoints (`/auth/signup`, `/auth/login`, `/auth/me`).
+
+Create a `.env` file in this project root to set the API base URL:
+
+```
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+If omitted, it defaults to `http://localhost:8000`.
+
+Auth flow (implemented in `src/auth/AuthContext.tsx`):
+1. Signup calls POST `/auth/signup` then auto login.
+2. Login calls POST `/auth/login` and stores `access_token`.
+3. On refresh, token is validated via GET `/auth/me`; invalid tokens are cleared.
+4. `Authorization: Bearer <token>` header is added automatically by the api client.
+
+Ensure the backend `.env` has matching `MONGO_URI`, `DB_NAME`, `JWT_SECRET_KEY`.
