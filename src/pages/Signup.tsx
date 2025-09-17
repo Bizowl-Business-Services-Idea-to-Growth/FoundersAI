@@ -18,11 +18,18 @@ const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
+      if (!passwordPolicy.test(password)) {
+        setError("Password must be at least 8 chars and include uppercase, lowercase, number, and special character.");
+        setLoading(false);
+        return;
+      }
       await signup(name, email, password);
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
@@ -91,12 +98,13 @@ const Signup: React.FC = () => {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1c6ed0] focus:outline-none"
                   placeholder="At least 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <p className="mt-1 text-xs text-gray-500">Must have 8+ chars incl. upper, lower, number & special.</p>
               </div>
             </div>
 

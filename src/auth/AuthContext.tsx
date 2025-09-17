@@ -1,14 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import api from './apiClient';
 
 type User = {
   id: string;
   name: string;
   email: string;
-  /**
-   * Optional auth token (demo only). In a real app this would come from your backend.
-   * We add it so components that expect a token (e.g. Profile) can proceed.
-   */
-  token?: string;
+  token: string;
 };
 
 type AuthContextType = {
@@ -29,51 +26,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    // hydrate from localStorage & inject token if missing
-    try {
-      const storedUser = localStorage.getItem(LS_USER_KEY);
-      const storedAuth = localStorage.getItem(LS_AUTH_KEY);
-      if (storedUser && storedAuth === "true") {
-        let parsed: User = JSON.parse(storedUser);
-        if (!parsed.token) {
-          // create a pseudo token for existing sessions (demo purpose only)
-            parsed = { ...parsed, token: crypto.randomUUID() };
-            localStorage.setItem(LS_USER_KEY, JSON.stringify(parsed));
+    (async () => {
+      try {
+        const storedUser = localStorage.getItem(LS_USER_KEY);
+        const storedAuth = localStorage.getItem(LS_AUTH_KEY);
+        if (!storedUser || storedAuth !== 'true') return;
+        const parsed: User = JSON.parse(storedUser);
+        // Validate token with backend
+        try {
+          await api.me(parsed.token);
+          setUser(parsed);
+          setIsAuthenticated(true);
+        } catch {
+          // invalid/expired token -> clear
+          localStorage.removeItem(LS_USER_KEY);
+          localStorage.removeItem(LS_AUTH_KEY);
         }
-        setUser(parsed);
-        setIsAuthenticated(true);
+      } catch {
+        /* ignore */
       }
-    } catch {
-      // ignore hydration errors
-    }
+    })();
   }, []);
 
   // Simulated async login/signup for demo purposes
-  const login = async (email: string, _password: string) => {
-    // fake delay
-    await new Promise((r) => setTimeout(r, 400));
-    const existing = localStorage.getItem(LS_USER_KEY);
-    let parsed: User | null = existing ? JSON.parse(existing) : { id: crypto.randomUUID(), name: email.split("@")[0] || "Founder", email };
-    if (parsed && !parsed.token) {
-      parsed.token = crypto.randomUUID();
-    }
-    localStorage.setItem(LS_USER_KEY, JSON.stringify(parsed));
-    localStorage.setItem(LS_AUTH_KEY, "true");
-    setUser(parsed);
+  const login = async (email: string, password: string) => {
+    const { access_token } = await api.login(email, password);
+    // fetch profile via /auth/me
+    const me: any = await api.me(access_token);
+    const userData: User = {
+      id: me.id,
+      name: me.name,
+      email: me.email,
+      token: access_token,
+    };
+    localStorage.setItem(LS_USER_KEY, JSON.stringify(userData));
+    localStorage.setItem(LS_AUTH_KEY, 'true');
+    setUser(userData);
     setIsAuthenticated(true);
   };
 
-  const signup = async (name: string, email: string, _password: string) => {
-    await new Promise((r) => setTimeout(r, 500));
-    const newUser: User = { id: crypto.randomUUID(), name: name || email.split("@")[0] || "Founder", email, token: crypto.randomUUID() };
-    localStorage.setItem(LS_USER_KEY, JSON.stringify(newUser));
-    localStorage.setItem(LS_AUTH_KEY, "true");
-    setUser(newUser);
-    setIsAuthenticated(true);
+  const signup = async (name: string, email: string, password: string) => {
+    const created: any = await api.signup(name, email, password);
+    // After signup, automatically login using same credentials
+    await login(email, password);
+    return created;
   };
 
   const logout = () => {
-    localStorage.setItem(LS_AUTH_KEY, "false");
+    localStorage.removeItem(LS_USER_KEY);
+    localStorage.removeItem(LS_AUTH_KEY);
     setIsAuthenticated(false);
     setUser(null);
   };

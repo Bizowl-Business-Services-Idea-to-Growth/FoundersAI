@@ -7,7 +7,8 @@ const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as any;
-  const from = location.state?.from?.pathname || "/dashboard";
+  // Default authenticated landing page changed from /dashboard to /founder
+  const from = location.state?.from?.pathname || "/founder";
   useEffect(() => {
     if (isAuthenticated) {
       navigate(from, { replace: true });
