@@ -106,8 +106,8 @@ const steps: StepType[] = [
 ];
 
 type Props = {
-  onComplete: () => void;
-  userId: string; 
+  onComplete: (assessmentId: string) => void;
+  userId: string;
 };
 
 const StartupAssessment: React.FC<Props> = ({ onComplete, userId }) => {
@@ -168,7 +168,9 @@ const StartupAssessment: React.FC<Props> = ({ onComplete, userId }) => {
           throw new Error(errData.detail || "Failed to save responses");
         }
 
-        onComplete();
+  const result = await response.json();
+  const assessmentId = result.assessmentId;
+  onComplete(assessmentId);
       } catch (error: any) {
         setError("Error saving responses: " + error.message);
       }
