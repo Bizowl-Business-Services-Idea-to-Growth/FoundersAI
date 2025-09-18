@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { VerticalTimeline, VerticalTimelineElement } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
 
-interface ActionPlanGeneratorProps { userId: string; }
+interface ActionPlanGeneratorProps { userId: string; assessmentId?: string }
 
 interface RoadmapStep {
   sequence: number;
@@ -25,7 +25,7 @@ interface StructuredRoadmap {
   [key: string]: any;
 }
 
-const ActionPlanGenerator: React.FC<ActionPlanGeneratorProps> = ({ userId }) => {
+const ActionPlanGenerator: React.FC<ActionPlanGeneratorProps> = ({ userId, assessmentId }) => {
   const [rawResponse, setRawResponse] = useState<string>("");
   const [structured, setStructured] = useState<StructuredRoadmap | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -37,7 +37,8 @@ const ActionPlanGenerator: React.FC<ActionPlanGeneratorProps> = ({ userId }) => 
       setError("");
       try {
         const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-        const res = await fetch(`${baseUrl}/generate-roadmap/${userId}`);
+  const endpoint = assessmentId ? `${baseUrl}/generate-roadmap/${userId}/${assessmentId}` : `${baseUrl}/generate-roadmap/${userId}`;
+  const res = await fetch(endpoint);
         if (!res.ok) {
             throw new Error(`Failed to get roadmap: ${res.status}`);
         }
@@ -78,7 +79,7 @@ const ActionPlanGenerator: React.FC<ActionPlanGeneratorProps> = ({ userId }) => 
       }
     }
     if (userId) fetchRoadmap(); else { setError("User ID is undefined. Cannot fetch roadmap."); setLoading(false);}    
-  }, [userId]);
+  }, [userId, assessmentId]);
 
   const sortedSteps: RoadmapStep[] = useMemo(() => {
     if (!structured?.roadmap) return [];
