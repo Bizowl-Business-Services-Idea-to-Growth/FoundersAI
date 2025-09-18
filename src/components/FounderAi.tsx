@@ -1,77 +1,77 @@
 import React, { useState } from "react";
-import { User, Phone, Mail, Globe, Bell, Brain } from "lucide-react";
+import { User, Bell, Brain } from "lucide-react";
 import StartAssessment from "./StartAssessment";
 import { useAuth } from "../auth/AuthContext";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Col, Row } from "react-bootstrap";
-import { FiSend } from "react-icons/fi";
-import { MdWavingHand } from "react-icons/md";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedin,
-  FaTwitter,
-  FaYoutube,
-} from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+// import { Col, Row } from "react-bootstrap";
+// import { FiSend } from "react-icons/fi";
+// import { MdWavingHand } from "react-icons/md";
+// import {
+//   FaFacebookF,
+//   FaInstagram,
+//   FaLinkedin,
+//   FaTwitter,
+//   FaYoutube,
+// } from "react-icons/fa";
 
-const encode = (data: Record<string, string>) => {
-  return Object.keys(data)
-    .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
-    .join("&");
-};
+// const encode = (data: Record<string, string>) => {
+//   return Object.keys(data)
+//     .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
+//     .join("&");
+// };
 
-const WindowOpenLink = (
-  url: string,
-  target: "_self" | "_blank" | "_parent" | "_top" | string = "_blank"
-) => {
-  window.open(url, target);
-};
+// const WindowOpenLink = (
+//   url: string,
+//   target: "_self" | "_blank" | "_parent" | "_top" | string = "_blank"
+// ) => {
+//   window.open(url, target);
+// };
 
 const FounderAi: React.FC = () => {
   const [isDarkMode] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: "" });
+  // const [formData, setFormData] = useState({ email: "" });
 
-  const socialLinks = [
-    { name: "Twitter", icon: <span>𝕏</span>, href: "#" },
-    { name: "Facebook", icon: <span>f</span>, href: "#" },
-    { name: "LinkedIn", icon: <span>in</span>, href: "#" },
-    { name: "Instagram", icon: <span>📷</span>, href: "#" },
-  ];
+  // const socialLinks = [
+  //   { name: "Twitter", icon: <span>𝕏</span>, href: "#" },
+  //   { name: "Facebook", icon: <span>f</span>, href: "#" },
+  //   { name: "LinkedIn", icon: <span>in</span>, href: "#" },
+  //   { name: "Instagram", icon: <span>📷</span>, href: "#" },
+  // ];
 
-  const services = [
-    "Business Process",
-    "Customer Support",
-    "IT Services",
-    "Digital Marketing",
-    "Finance & Accounting",
-    "Human Resources",
-  ];
+  // const services = [
+  //   "Business Process",
+  //   "Customer Support",
+  //   "IT Services",
+  //   "Digital Marketing",
+  //   "Finance & Accounting",
+  //   "Human Resources",
+  // ];
 
-  const companyItems = [
-    "About Us",
-    "Leadership",
-    "Careers",
-    "AI Blog",
-    "Press",
-    "Partners",
-  ];
+  // const companyItems = [
+  //   "About Us",
+  //   "Leadership",
+  //   "Careers",
+  //   "AI Blog",
+  //   "Press",
+  //   "Partners",
+  // ];
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    fetch("/", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: encode({ "form-name": "newsletter", ...formData }),
-    }).catch((error) => console.error(error));
-  };
+  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   fetch("/", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  //     body: encode({ "form-name": "newsletter", ...formData }),
+  //   }).catch((error) => console.error(error));
+  // };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+  //   setFormData({ ...formData, [name]: value });
+  // };
 
   if (!user || !user.id) {
     return (
