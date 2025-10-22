@@ -1,13 +1,17 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import api from './apiClient';
+import React, { createContext, useContext, useMemo } from "react";
+
+// Simplified no-auth provider for public/demo mode.
+// Provides a default anonymous user and no-op auth methods so the app
+// can be embedded/used without requiring login. This keeps profileStorage
+// and other database code untouched while removing auth gating.
 
 type User = {
   id: string;
   name: string;
   email: string;
-  token: string;
+  token?: string;
 };
-// ab
+
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
@@ -18,71 +22,34 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const LS_USER_KEY = "fa_user";
-const LS_AUTH_KEY = "fa_isAuthenticated";
+const ANON_USER: User = { id: 'anon', name: 'Founder', email: '' };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Always treat user as authenticated in the public/demo mode so pages
+  // that expect a user can still function. Methods are intentionally
+  // no-ops to make future SSO integration straightforward.
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const storedUser = localStorage.getItem(LS_USER_KEY);
-        const storedAuth = localStorage.getItem(LS_AUTH_KEY);
-        if (!storedUser || storedAuth !== 'true') return;
-        const parsed: User = JSON.parse(storedUser);
-        // Validate token with backend
-        try {
-          await api.me(parsed.token);
-          setUser(parsed);
-          setIsAuthenticated(true);
-        } catch {
-          // invalid/expired token -> clear
-          localStorage.removeItem(LS_USER_KEY);
-          localStorage.removeItem(LS_AUTH_KEY);
-        }
-      } catch {
-        /* ignore */
-      }
-    })();
-  }, []);
-
-  // Simulated async login/signup for demo purposes
-  const login = async (email: string, password: string) => {
-    const { access_token } = await api.login(email, password);
-    // fetch profile via /auth/me
-    const me: any = await api.me(access_token);
-    const userData: User = {
-      id: me.id,
-      name: me.name,
-      email: me.email,
-      token: access_token,
-    };
-    localStorage.setItem(LS_USER_KEY, JSON.stringify(userData));
-    localStorage.setItem(LS_AUTH_KEY, 'true');
-    setUser(userData);
-    setIsAuthenticated(true);
+  const login = async (_email: string, _password: string) => {
+    // no-op: resolve immediately
+    return Promise.resolve();
   };
 
-  const signup = async (name: string, email: string, password: string) => {
-    const created: any = await api.signup(name, email, password);
-    // After signup, automatically login using same credentials
-    await login(email, password);
-    return created;
+  const signup = async (_name: string, _email: string, _password: string) => {
+    // no-op
+    return Promise.resolve();
   };
 
   const logout = () => {
-    localStorage.removeItem(LS_USER_KEY);
-    localStorage.removeItem(LS_AUTH_KEY);
-    setIsAuthenticated(false);
-    setUser(null);
+    // no-op
   };
 
-  const value = useMemo<AuthContextType>(
-    () => ({ user, isAuthenticated, login, signup, logout }),
-    [user, isAuthenticated]
-  );
+  const value = useMemo<AuthContextType>(() => ({
+    user: ANON_USER,
+    isAuthenticated: true,
+    login,
+    signup,
+    logout,
+  }), []);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -44,14 +44,25 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
   return body as T;
 }
 
+// Keep standard request available for public API endpoints (llm, recommend, chat-history)
+// but provide mocked auth endpoints so the frontend doesn't fail when invoking them.
+
 export const api = {
-  signup: (name: string, email: string, password: string) =>
-    request('/auth/signup', { method: 'POST', body: JSON.stringify({ name, email, password }) }),
-  login: (email: string, password: string) =>
-    request<{ access_token: string; token_type: string }>(
-      '/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }
-    ),
-  me: (token: string) => request('/auth/me', { method: 'GET' }, token),
+  signup: async (name: string, email: string, _password: string) => {
+    // Return a lightweight mock object. Client will call login next in some flows,
+    // but our AuthProvider is no-op so this is just for compatibility.
+    return Promise.resolve({ id: `mock-${Date.now()}`, name, email });
+  },
+  login: async (email: string, _password: string) => {
+    // Return a dummy access token; AuthContext no-op will accept it.
+    return Promise.resolve({ access_token: `mock-token-${btoa(email).slice(0,8)}`, token_type: 'bearer' });
+  },
+  me: async (_token: string) => {
+    // Return a mock user profile. Keep shape compatible with existing code.
+    return Promise.resolve({ id: 'anon', name: 'Founder', email: '' });
+  },
+  // expose generic request for non-auth endpoints
+  request,
 };
 
 export default api;

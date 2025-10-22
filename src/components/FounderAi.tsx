@@ -111,6 +111,21 @@ const FounderAi: React.FC = () => {
           </>
         ) : (
           <div className="bg-white shadow-md rounded-lg px-6 py-10 m-10">
+            {/* End Assessment button on parent page (visible when assessment started) */}
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  // confirm before ending the assessment and navigate home
+                  const ok = window.confirm(
+                    "You have started the assessment. Ending it now will lose your progress. Do you want to end the assessment and return home?"
+                  );
+                  if (ok) setShowForm(false);
+                }}
+                className="px-3 py-2 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-100"
+              >
+                End assessment
+              </button>
+            </div>
             <StartAssessment onComplete={() => navigate("/dashboard")} userId={user.id} />
           </div>
         )}

@@ -1,15 +1,8 @@
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "./AuthContext";
+// In demo/no-auth mode we allow access to all routes. Keep this component
+// present so the route tree doesn't need further changes when SSO is added.
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  const location = useLocation();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
   return <>{children}</>;
 };
 
