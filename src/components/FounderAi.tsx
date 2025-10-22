@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Bell, Brain } from "lucide-react";
+import { User, Brain } from "lucide-react";
 import StartAssessment from "./StartAssessment";
 import { useAuth } from "../auth/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 const FounderAi: React.FC = () => {
   const [isDarkMode] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   if (!user || !user.id) {
@@ -21,31 +21,31 @@ const FounderAi: React.FC = () => {
       {/* Navbar */}
       <nav className="w-full h-20 bg-white border-b border-[#1c6ed0] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="bg-[#1c6ed0] p-2 rounded-lg">
-            <Brain className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-[#1c6ed0] font-semibold text-2xl">FoundersAI</h1>
-            <p className="text-gray-500 text-xs">by Bizowl</p>
-          </div>
+          <Link to="/" className="flex items-center space-x-2 no-underline">
+            <div className="bg-[#1c6ed0] p-2 rounded-lg">
+              <Brain className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-[#1c6ed0] font-semibold text-2xl">FoundersAI</h1>
+              <p className="text-gray-500 text-xs">by Bizowl</p>
+            </div>
+          </Link>
         </div>
         <div className="flex items-center space-x-6">
-          <button className="text-gray-600 hover:text-[#1c6ed0] cursor-pointer">
-            <Bell className="w-5 h-5" />
-          </button>
           {isAuthenticated ? (
             <>
-              <Link to="/profile" title={user?.email} className="w-8 h-8 flex items-center justify-center bg-[#1c6ed0] cursor-pointer text-white rounded-full font-semibold">
+              {/* Profile/avatar temporarily hidden */}
+              {/** <Link to="/profile" title={user?.email} className="w-8 h-8 flex items-center justify-center bg-[#1c6ed0] cursor-pointer text-white rounded-full font-semibold">
                 {(user?.name?.[0] || "F").toUpperCase()}
-              </Link>
+              </Link> */}
               <button
                 onClick={() => {
-                  logout();
-                  navigate("/login");
+                  // Navigate back to home without logging out
+                  navigate("/");
                 }}
                 className="text-gray-600 hover:text-[#1c6ed0] cursor-pointer font-medium"
               >
-                Logout
+                Go back home
               </button>
             </>
           ) : (
@@ -115,11 +115,27 @@ const FounderAi: React.FC = () => {
             <div className="mb-4">
               <button
                 onClick={() => {
-                  // confirm before ending the assessment and navigate home
                   const ok = window.confirm(
                     "You have started the assessment. Ending it now will lose your progress. Do you want to end the assessment and return home?"
                   );
-                  if (ok) setShowForm(false);
+                  if (!ok) return;
+
+                  // Notify parent window (useful when embedded via iframe)
+                  try {
+                    window.parent.postMessage({ type: "FOUNDERS_AI_END_ASSESSMENT" }, "*");
+                  } catch (e) {
+                    // ignore
+                  }
+
+                  // Hide the form (return to parent view)
+                  setShowForm(false);
+
+                  // Also try an internal navigation to root in case this app is running standalone
+                  try {
+                    navigate("/");
+                  } catch (e) {
+                    // ignore
+                  }
                 }}
                 className="px-3 py-2 rounded-md bg-red-50 text-red-700 hover:bg-red-100 border border-red-100"
               >

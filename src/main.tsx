@@ -10,7 +10,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import RequireAuth from "./auth/RequireAuth";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import UserProfile from "./pages/Profile";
+// import UserProfile from "./pages/Profile"; // temporarily disabled
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -35,7 +35,8 @@ createRoot(document.getElementById("root")!).render(
           />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path= "/profile" element={<UserProfile/>}/>
+          {/* Profile route temporarily disabled */}
+          {/** <Route path="/profile" element={<UserProfile/>}/> */}
           <Route
             path="/dashboard"
             element={
